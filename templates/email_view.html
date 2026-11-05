@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf, badge %}
+{% block title %}{{ m['subject'] or 'E-mail' }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <a class="muted small" href="{{ url_for('mail.inbox') }}">← E-mails</a>
+    <h1>{{ m['subject'] or '(sem assunto)' }}</h1>
+    <p class="muted">De <b>{{ m['from_name'] or m['from_addr'] }}</b>{% if m['from_name'] %} &lt;{{ m['from_addr'] }}&gt;{% endif %} · {{ m['received_at']|localdt }}</p>
+  </div>
+  <div class="actions">
+    <form method="post" action="{{ url_for('mail.mark_unread', email_id=m['id']) }}" class="inline-form">{{ csrf() }}<button class="btn btn-sm">Marcar como não lida</button></form>
+    <form method="post" action="{{ url_for('mail.delete', email_id=m['id']) }}" class="inline-form" data-confirm="Remover esta mensagem do LinkFlow? A original continua no seu e-mail.">{{ csrf() }}<button class="btn btn-sm btn-danger">Remover</button></form>
+  </div>
+</div>
+<div class="grid-main">
+  <section class="panel">
+    <pre class="mail-body">{{ m['body'] or '(mensagem sem texto)' }}</pre>
+    <p class="muted small">Exibido como texto puro por segurança (links e imagens do e-mail não são carregados). Para responder, use o seu e-mail.</p>
+  </section>
+  <aside>
+    <section class="panel">
+      <div class="panel-head"><h3>Vaga vinculada</h3></div>
+      {% if m['job_id'] %}
+        <p><a href="{{ url_for('jobs.detail', job_id=m['job_id']) }}"><b>{{ m['job_title'] }}</b></a><br><span class="muted">{{ m['job_company'] }}</span></p>
+        <p>{{ badge(m['job_status']) }}</p>
+        <p class="muted small">Vínculo por: {{ m['matched_by'] or '—' }}</p>
+        <form method="post" action="{{ url_for('jobs.change_status', job_id=m['job_id']) }}" class="stack">
+          {{ csrf() }}<input type="hidden" name="back" value="{{ url_for('mail.view', email_id=m['id']) }}">
+          <label class="small muted">Atualizar status da vaga (manual)
+            <select name="status">{% for k, l in STATUSES %}<option value="{{ k }}" {{ 'selected' if m['job_status'] == k }}>{{ l }}</option>{% endfor %}</select></label>
+          <button class="btn btn-sm">Alterar status</button>
+        </form>
+      {% else %}<p class="empty">Sem vaga vinculada.</p>{% endif %}
+      <form method="post" action="{{ url_for('mail.relink', email_id=m['id']) }}" class="stack mt">
+        {{ csrf() }}
+        <label class="small muted">Vincular a outra vaga
+          <select name="job_id"><option value="">— nenhuma —</option>
+            {% for j in jobs %}<option value="{{ j['id'] }}" {{ 'selected' if j['id'] == m['job_id'] }}>{{ j['company'] }} — {{ j['title'] }}</option>{% endfor %}
+          </select></label>
+        <button class="btn btn-sm">Salvar vínculo</button>
+      </form>
+    </section>
+  </aside>
+</div>
+{% endblock %}

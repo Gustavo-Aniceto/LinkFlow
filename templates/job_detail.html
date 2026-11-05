@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import badge, status_select, sim_tag, csrf %}
+{% block title %}{{ job['title'] }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <a class="muted small" href="{{ url_for('jobs.list_jobs') }}">← Vagas</a>
+    <h1>{{ job['title'] }}</h1>
+    <p class="muted">{{ job['company'] }}{% if job['location'] %} · {{ job['location'] }}{% endif %}{% if job['work_mode'] %} · {{ WORK_MODE_LABELS[job['work_mode']] }}{% endif %}{% if job['salary'] %} · {{ job['salary'] }}{% endif %}</p>
+  </div>
+  <div class="actions">
+    {% if job['url'] %}<a class="btn btn-blue" href="{{ job['url'] }}" target="_blank" rel="noopener noreferrer">Abrir vaga original ↗</a>{% endif %}
+    <a class="btn" href="{{ url_for('jobs.edit_job', job_id=job['id']) }}">Editar</a>
+    <form method="post" action="{{ url_for('jobs.delete_job', job_id=job['id']) }}" class="inline-form" data-confirm="Excluir esta vaga e seus documentos?">
+      {{ csrf() }}<button class="btn btn-danger">Excluir</button></form>
+  </div>
+</div>
+
+<div class="grid-main">
+  <div>
+    <section class="panel">
+      <div class="panel-head"><h3>Descrição da vaga</h3></div>
+      {% if job['description'] %}<div class="prose">{{ job['description'] }}</div>
+      {% else %}<p class="empty">Sem descrição. <a href="{{ url_for('jobs.edit_job', job_id=job['id']) }}">Adicionar descrição</a> para poder analisar.</p>{% endif %}
+    </section>
+
+    <section class="panel" id="analise">
+      <div class="panel-head">
+        <h3>Análise de compatibilidade</h3>
+        <form method="post" action="{{ url_for('jobs.analyze_job', job_id=job['id']) }}" class="inline-form">
+          {{ csrf() }}<button class="btn btn-primary btn-sm" data-loading="Analisando…">{{ 'Analisar novamente' if analysis else 'Analisar compatibilidade' }}</button>
+        </form>
+      </div>
+      {% if analysis %}
+        {% if analysis.simulated %}<div class="callout callout-warn"><strong>SIMULADO.</strong> {{ analysis.note }}</div>{% endif %}
+        <div class="score-row">
+          <div class="ring" style="--p: {{ analysis.score or 0 }}"><span>{% if analysis.score is not none %}{{ analysis.score }}%{% else %}—{% endif %}</span></div>
+          <div><strong>Compatibilidade {{ sim_tag(analysis.simulated) }}</strong>
+            <p class="muted small">Analisado em {{ analysis.created_at|localdt }}{% if analysis.score is none %} · não foi possível identificar requisitos{% endif %}</p></div>
+        </div>
+        <div class="grid-2 tight">
+          <div class="sub ok"><h4>✔ Requisitos atendidos ({{ analysis.met|length }})</h4>
+            {% if analysis.met %}<ul>{% for m in analysis.met %}<li><b>{{ m.requirement }}</b>{% if m.evidence %}<small class="muted"> — {{ m.evidence }}</small>{% endif %}</li>{% endfor %}</ul>{% else %}<p class="empty">Nenhum.</p>{% endif %}</div>
+          <div class="sub bad"><h4>✖ Requisitos não encontrados ({{ analysis.missing|length }})</h4>
+            {% if analysis.missing %}<ul>{% for m in analysis.missing %}<li>{{ m }}</li>{% endfor %}</ul>{% else %}<p class="empty">Nenhum.</p>{% endif %}</div>
+          <div class="sub"><h4>Pontos fortes</h4>{% if analysis.strengths %}<ul>{% for s in analysis.strengths %}<li>{{ s }}</li>{% endfor %}</ul>{% else %}<p class="empty">—</p>{% endif %}</div>
+          <div class="sub"><h4>Pontos de melhoria</h4>{% if analysis.improvements %}<ul>{% for s in analysis.improvements %}<li>{{ s }}</li>{% endfor %}</ul>{% else %}<p class="empty">—</p>{% endif %}</div>
+        </div>
+        <div class="sub"><h4>Sugestões de personalização do currículo</h4>
+          {% if analysis.suggestions %}<ul>{% for s in analysis.suggestions %}<li>{{ s }}</li>{% endfor %}</ul>{% else %}<p class="empty">—</p>{% endif %}</div>
+      {% else %}
+        <p class="empty">Ainda não analisada. A análise compara os requisitos da vaga com o seu perfil — sem inventar nada. Provedor atual: <b>{{ ai_provider_label }}</b>.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <aside>
+    <section class="panel">
+      <div class="panel-head"><h3>Status</h3></div>
+      <p>{{ badge(job['status']) }}</p>
+      {{ status_select(job) }}
+      <ol class="timeline">
+        {% for h in history %}<li><span>{{ STATUS_LABELS[h['status']] }}</span><time>{{ h['changed_at']|localdt }}</time></li>{% endfor %}
+      </ol>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h3>E-mails da empresa</h3><a class="btn btn-sm" href="{{ url_for('mail.inbox') }}">Caixa</a></div>
+      {% if mails %}<ul class="plain">
+        {% for m in mails %}<li class="mail-mini {{ 'unread' if not m['is_read'] }}"><a href="{{ url_for('mail.view', email_id=m['id']) }}">{{ m['subject'] or '(sem assunto)' }}</a>
+          <small class="muted">{{ m['from_name'] or m['from_addr'] }} · {{ m['received_at']|localdt }}</small></li>{% endfor %}
+      </ul>{% else %}<p class="empty">Nenhuma resposta encontrada. Conecte seu e-mail em <a href="{{ url_for('mail.inbox') }}">E-mails</a> e sincronize.</p>{% endif %}
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h3>Preparar candidatura</h3></div>
+      <p class="muted small">Gere os documentos, edite e exporte em PDF. A candidatura em si é feita por você no site original.</p>
+      <div class="stack">
+        <form method="post" action="{{ url_for('apply.package', job_id=job['id']) }}">{{ csrf() }}<button class="btn btn-primary btn-block" data-loading="Montando pacote…">⚡ Montar pacote de candidatura</button></form>
+        {% if docs %}<a class="btn btn-block" href="{{ url_for('apply.apply_page', job_id=job['id']) }}">Revisar e enviar candidatura →</a>{% endif %}
+        <form method="post" action="{{ url_for('jobs.generate', job_id=job['id'], kind='resume') }}">{{ csrf() }}<button class="btn btn-block" data-loading="Gerando…">Gerar currículo direcionado</button></form>
+        <form method="post" action="{{ url_for('jobs.generate', job_id=job['id'], kind='cover') }}">{{ csrf() }}<button class="btn btn-block" data-loading="Gerando…">Gerar carta de apresentação</button></form>
+        {% if job['url'] %}<a class="btn btn-blue btn-block" href="{{ job['url'] }}" target="_blank" rel="noopener noreferrer">Abrir vaga original ↗</a>{% endif %}
+      </div>
+      <h4 class="mt">Documentos salvos</h4>
+      {% if docs %}<ul class="plain">
+        {% for d in docs %}<li><a href="{{ url_for('documents.edit', doc_id=d['id']) }}">{{ d['title'] }}</a> {{ sim_tag(d['simulated']) }}</li>{% endfor %}
+      </ul>{% else %}<p class="empty">Nenhum documento salvo.</p>{% endif %}
+    </section>
+  </aside>
+</div>
+{% endblock %}

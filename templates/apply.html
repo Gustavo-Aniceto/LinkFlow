@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf, sim_tag, badge %}
+{% block title %}Candidatura — {{ job['title'] }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <a class="muted small" href="{{ url_for('jobs.detail', job_id=job['id']) }}">← {{ job['title'] }} · {{ job['company'] }}</a>
+    <h1>Candidatura</h1>
+    <p class="muted">Revise o pacote e envie. {{ badge(job['status']) }}</p>
+  </div>
+  {% if job['url'] %}<a class="btn btn-blue" href="{{ job['url'] }}" target="_blank" rel="noopener noreferrer">Abrir vaga original ↗</a>{% endif %}
+</div>
+
+<div class="steps">
+  <div class="step {{ 'ok' if resume }}"><b>1. Currículo</b>{% if resume %}pronto {{ sim_tag(resume['simulated']) }} · <a href="{{ url_for('documents.edit', doc_id=resume['id']) }}">editar</a>{% else %}não gerado{% endif %}</div>
+  <div class="step {{ 'ok' if cover }}"><b>2. Carta</b>{% if cover %}pronta {{ sim_tag(cover['simulated']) }} · <a href="{{ url_for('documents.edit', doc_id=cover['id']) }}">editar</a>{% else %}não gerada{% endif %}</div>
+  <div class="step {{ 'ok' if sent }}"><b>3. Envio</b>{% if sent %}enviado{% else %}pendente{% endif %}</div>
+</div>
+
+{% if not resume or not cover %}
+<section class="panel"><p>Monte o pacote para gerar currículo e carta direcionados a esta vaga (usando apenas dados do seu perfil).</p>
+  <form method="post" action="{{ url_for('apply.package', job_id=job['id']) }}">{{ csrf() }}<button class="btn btn-primary" data-loading="Montando pacote…">⚡ Montar pacote</button></form></section>
+{% else %}
+<div class="grid-main">
+  <section class="panel">
+    <div class="panel-head"><h3>Enviar por e-mail</h3></div>
+    {% if not acc %}
+      <div class="callout callout-warn">Para enviar daqui, conecte seu e-mail em <a href="{{ url_for('mail.inbox') }}">E-mails</a>. Você também pode abrir a vaga original e se candidatar lá, baixando os PDFs abaixo.</div>
+    {% else %}
+      <p class="muted small">Envio pela sua conta <b>{{ acc['username'] }}</b> ({{ acc['smtp_host'] }}). Um destinatário por vez, só depois da sua confirmação. Enviados nas últimas 24h: {{ sent_today }}/{{ max_sends }}.</p>
+      <form method="post" action="{{ url_for('apply.send_application', job_id=job['id']) }}" class="form"
+            data-confirm="Enviar esta candidatura agora? O e-mail sai da sua conta e não pode ser desfeito.">
+        {{ csrf() }}
+        <label>Para (e-mail do recrutador / vaga)
+          <input type="email" name="to" value="{{ defaults.to }}" required placeholder="recrutador@empresa.com" list="rec-list">
+          <datalist id="rec-list">{% for s in suggestions %}<option value="{{ s }}">{% endfor %}</datalist></label>
+        {% if not suggestions %}<p class="muted small">Nenhum e-mail encontrado na descrição da vaga. Informe o e-mail do recrutador manualmente.</p>{% endif %}
+        <label>Assunto<input name="subject" value="{{ defaults.subject }}" required maxlength="200"></label>
+        <label>Mensagem <small>(sugestão: a sua carta de apresentação — edite à vontade)</small><textarea name="body" rows="12" required>{{ defaults.body }}</textarea></label>
+        <fieldset class="checks"><legend>Anexos (PDF gerado do documento salvo)</legend>
+          <label class="check"><input type="checkbox" name="attach_resume" value="1" checked> Currículo</label>
+          <label class="check"><input type="checkbox" name="attach_cover" value="1"> Carta de apresentação</label>
+        </fieldset>
+        <label class="check"><input type="checkbox" name="confirm" value="1" required> Revisei a mensagem e os anexos e quero enviar.</label>
+        <div class="actions"><button class="btn btn-primary" data-loading="Enviando…">Enviar candidatura</button></div>
+      </form>
+    {% endif %}
+  </section>
+  <aside>
+    <section class="panel">
+      <div class="panel-head"><h3>Documentos</h3></div>
+      <div class="stack">
+        {% for d in (resume, cover) %}
+        <form method="post" action="{{ url_for('documents.pdf') }}">{{ csrf() }}<input type="hidden" name="title" value="{{ d['title'] }}"><input type="hidden" name="content" value="{{ d['content'] }}"><button class="btn btn-block btn-sm">⇩ PDF: {{ 'Currículo' if d['kind'] == 'resume' else 'Carta' }}</button></form>
+        {% endfor %}
+        <form method="post" action="{{ url_for('apply.package', job_id=job['id']) }}" data-confirm="Gerar um novo pacote? Os atuais continuam salvos em Documentos.">{{ csrf() }}<button class="btn btn-block btn-sm btn-ghost">Gerar novo pacote</button></form>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3>Envios desta vaga</h3></div>
+      {% if sent %}<ul class="plain">{% for s in sent %}<li><b>{{ s['to_addr'] }}</b><br><small class="muted">{{ s['sent_at']|localdt }} · {{ s['attachments'] or 'sem anexos' }}</small></li>{% endfor %}</ul>
+      {% else %}<p class="empty">Nenhum envio ainda.</p>{% endif %}
+    </section>
+  </aside>
+</div>
+{% endif %}
+{% endblock %}

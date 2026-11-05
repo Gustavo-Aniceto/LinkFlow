@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import sim_tag, csrf %}
+{% block title %}Documentos{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Documentos</h1><p class="muted">Currículos e cartas salvos. Gere novos a partir da página de uma vaga.</p></div>
+  <a class="btn" href="{{ url_for('jobs.list_jobs') }}">Ir para vagas</a></div>
+{% if docs %}
+<section class="panel">
+<table class="table">
+  <thead><tr><th>Título</th><th>Tipo</th><th>Vaga</th><th>Atualizado</th><th class="right">Ações</th></tr></thead>
+  <tbody>
+  {% for d in docs %}
+    <tr>
+      <td><a href="{{ url_for('documents.edit', doc_id=d['id']) }}">{{ d['title'] }}</a> {{ sim_tag(d['simulated']) }}</td>
+      <td>{{ KIND_LABELS[d['kind']] }}</td>
+      <td>{% if d['job_id'] %}<a href="{{ url_for('jobs.detail', job_id=d['job_id']) }}">{{ d['job_title'] }} · {{ d['job_company'] }}</a>{% else %}—{% endif %}</td>
+      <td>{{ d['updated_at']|localdt }}</td>
+      <td class="right actions">
+        <a class="btn btn-sm" href="{{ url_for('documents.edit', doc_id=d['id']) }}">Editar</a>
+        <form method="post" action="{{ url_for('documents.pdf') }}" class="inline-form">{{ csrf() }}<input type="hidden" name="title" value="{{ d['title'] }}"><input type="hidden" name="content" value="{{ d['content'] }}"><button class="btn btn-sm btn-blue">PDF</button></form>
+        <form method="post" action="{{ url_for('documents.delete', doc_id=d['id']) }}" class="inline-form" data-confirm="Excluir este documento?">{{ csrf() }}<button class="btn btn-sm btn-danger">Excluir</button></form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</section>
+{% else %}
+<div class="panel empty-state"><p class="empty">Nenhum documento salvo ainda.</p><a class="btn btn-primary" href="{{ url_for('jobs.list_jobs') }}">Escolher uma vaga</a></div>
+{% endif %}
+{% endblock %}

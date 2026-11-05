@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import badge, status_select %}
+{% block title %}Vagas{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Vagas</h1><p class="muted">Oportunidades que você encontrou e quer acompanhar.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('jobs.new_job') }}">+ Nova vaga</a>
+</div>
+
+<form method="get" class="filters">
+  <input type="search" name="q" value="{{ q }}" placeholder="Buscar por empresa, cargo ou local…">
+  <select name="status"><option value="">Todos os status</option>{% for k, l in STATUSES %}<option value="{{ k }}" {{ 'selected' if f_status == k }}>{{ l }}</option>{% endfor %}</select>
+  <select name="mode"><option value="">Qualquer modalidade</option>{% for k, l in WORK_MODES %}<option value="{{ k }}" {{ 'selected' if f_mode == k }}>{{ l }}</option>{% endfor %}</select>
+  <button class="btn">Filtrar</button>
+  {% if q or f_status or f_mode %}<a class="btn btn-ghost" href="{{ url_for('jobs.list_jobs') }}">Limpar</a>{% endif %}
+</form>
+
+{% if jobs %}
+<div class="job-list">
+  {% for j in jobs %}
+  <article class="job-card">
+    <div class="job-main">
+      <h3><a href="{{ url_for('jobs.detail', job_id=j['id']) }}">{{ j['title'] }}</a></h3>
+      <p class="muted">{{ j['company'] }}{% if j['location'] %} · {{ j['location'] }}{% endif %}{% if j['work_mode'] %} · {{ WORK_MODE_LABELS[j['work_mode']] }}{% endif %}{% if j['salary'] %} · {{ j['salary'] }}{% endif %}</p>
+    </div>
+    <div class="job-side">
+      {% if scores.get(j['id']) is not none %}<span class="score-chip" title="Última análise">{{ scores[j['id']] }}%</span>{% endif %}
+      {{ status_select(j, back=request.full_path) }}
+      <div class="actions">
+        <a class="btn btn-sm" href="{{ url_for('jobs.detail', job_id=j['id']) }}">Abrir</a>
+        {% if j['url'] %}<a class="btn btn-sm btn-blue" href="{{ j['url'] }}" target="_blank" rel="noopener noreferrer">Vaga original ↗</a>{% endif %}
+      </div>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<div class="panel empty-state">
+  <p class="empty">{% if q or f_status or f_mode %}Nenhuma vaga corresponde aos filtros.{% else %}Você ainda não cadastrou nenhuma vaga.{% endif %}</p>
+  <a class="btn btn-primary" href="{{ url_for('jobs.new_job') }}">Cadastrar primeira vaga</a>
+</div>
+{% endif %}
+{% endblock %}

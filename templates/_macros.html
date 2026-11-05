@@ -1,0 +1,16 @@
+{% macro badge(status) %}<span class="badge st-{{ status }}">{{ STATUS_LABELS[status] }}</span>{% endmacro %}
+
+{% macro sim_tag(simulated) %}{% if simulated %}<span class="tag tag-sim" title="Gerado sem IA real (modo demonstrativo)">SIMULADO</span>{% else %}<span class="tag tag-ai">IA</span>{% endif %}{% endmacro %}
+
+{% macro csrf() %}<input type="hidden" name="_csrf" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro status_select(job, back='') %}
+<form method="post" action="{{ url_for('jobs.change_status', job_id=job.id) }}" class="inline-form js-status-form">
+  {{ csrf() }}
+  {% if back %}<input type="hidden" name="back" value="{{ back }}">{% endif %}
+  <select name="status" class="select-sm js-status-select" aria-label="Alterar status">
+    {% for k, l in STATUSES %}<option value="{{ k }}" {{ 'selected' if job.status == k }}>{{ l }}</option>{% endfor %}
+  </select>
+  <noscript><button class="btn btn-sm">Alterar</button></noscript>
+</form>
+{% endmacro %}

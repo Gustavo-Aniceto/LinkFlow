@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import sim_tag, csrf %}
+{% block title %}{{ 'Editar documento' if doc else 'Novo documento' }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    {% if job %}<a class="muted small" href="{{ url_for('jobs.detail', job_id=job['id']) }}">← {{ job['title'] }} · {{ job['company'] }}</a>{% endif %}
+    <h1>{{ 'Currículo' if kind == 'resume' else 'Carta de apresentação' }} {{ sim_tag(simulated) }}</h1>
+    {% if not doc %}<p class="muted"><b>Rascunho não salvo.</b> Edite à vontade e clique em “Salvar”.</p>{% endif %}
+  </div>
+</div>
+{% if note %}<div class="callout {{ 'callout-warn' if simulated }}">{{ note }}</div>{% endif %}
+<p class="callout callout-info small">Revise com atenção: inclua apenas o que é verdadeiro. Marcação: <code># Nome</code>, <code>## SEÇÃO</code>, <code>### Cargo — Empresa</code>, <code>- item</code>.</p>
+
+<form method="post" id="doc-form" class="form panel">
+  {{ csrf() }}
+  {% if doc %}<input type="hidden" name="doc_id" value="{{ doc['id'] }}">{% endif %}
+  {% if job %}<input type="hidden" name="job_id" value="{{ job['id'] }}">{% endif %}
+  <input type="hidden" name="kind" value="{{ kind }}">
+  <input type="hidden" name="simulated" value="{{ 1 if simulated else 0 }}">
+  <label>Título do documento<input name="title" required value="{{ title }}"></label>
+  <label>Conteúdo<textarea name="content" rows="26" class="mono" required>{{ content }}</textarea></label>
+  {% if job and job['status'] in ('found', 'analyzed') %}
+  <label class="check"><input type="checkbox" name="mark_ready" value="1" checked> Marcar a vaga como “Pronta para candidatura” ao salvar</label>
+  {% endif %}
+  <div class="actions">
+    <button class="btn btn-primary" formaction="{{ url_for('documents.save') }}">Salvar</button>
+    <button class="btn btn-blue" formaction="{{ url_for('documents.pdf') }}" formnovalidate>Exportar PDF</button>
+    <a class="btn btn-ghost" href="{{ url_for('documents.list_docs') }}">Documentos</a>
+  </div>
+</form>
+{% endblock %}

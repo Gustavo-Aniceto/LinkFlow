@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Texto extraído{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Texto extraído</h1><p class="muted">{{ row['original_name'] }} · {{ row['created_at']|localdt }}</p></div>
+  <div class="actions">
+    {% if row['parsed_json'] %}<a class="btn btn-primary" href="{{ url_for('profile.edit', **{'import': row['id']}) }}">Revisar e preencher perfil</a>{% endif %}
+    <a class="btn" href="{{ url_for('profile.import_resume') }}">Voltar</a>
+  </div>
+</div>
+<section class="panel"><pre class="pre">{{ row['extracted_text'] }}</pre></section>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import status_select %}
+{% block title %}Candidaturas{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Central de candidaturas</h1>
+  <p class="muted">Arraste os cartões entre as colunas ou use o seletor de status de cada vaga.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('jobs.new_job') }}">+ Nova vaga</a></div>
+
+<div class="board" id="board">
+  {% for key, label in STATUSES %}
+  <section class="column col-{{ key }}" data-status="{{ key }}">
+    <header><span class="col-dot"></span><h3>{{ label }}</h3><span class="count" data-count>{{ columns[key]|length }}</span></header>
+    <div class="dropzone-col" data-drop>
+      {% for j in columns[key] %}
+      <article class="kcard" draggable="true" data-job="{{ j['id'] }}">
+        <a href="{{ url_for('jobs.detail', job_id=j['id']) }}" class="k-title">{{ j['title'] }}</a>
+        <p class="muted small">{{ j['company'] }}{% if j['work_mode'] %} · {{ WORK_MODE_LABELS[j['work_mode']] }}{% endif %}</p>
+        {{ status_select(j, back=url_for('jobs.board')) }}
+        {% if j['url'] %}<a class="small" href="{{ j['url'] }}" target="_blank" rel="noopener noreferrer">Vaga original ↗</a>{% endif %}
+      </article>
+      {% endfor %}
+      <p class="empty small js-col-empty" {{ 'hidden' if columns[key] }}>Vazio</p>
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

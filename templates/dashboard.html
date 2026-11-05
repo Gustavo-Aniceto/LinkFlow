@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import badge %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Olá, {{ current_user['name'].split()[0] }}</h1><p class="muted">Visão geral da sua busca por emprego.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('jobs.new_job') }}">+ Nova vaga</a>
+</div>
+
+{% if not has_profile %}
+<div class="callout">
+  <strong>Comece pelo perfil.</strong> A análise de compatibilidade e os documentos usam as informações do seu perfil.
+  <a class="btn btn-sm btn-primary" href="{{ url_for('profile.import_resume') }}">Importar currículo (PDF)</a>
+  <a class="btn btn-sm" href="{{ url_for('profile.edit') }}">Preencher manualmente</a>
+</div>
+{% endif %}
+
+<section class="cards">
+  <a class="stat" href="{{ url_for('jobs.list_jobs') }}"><span class="stat-label">Vagas cadastradas</span><span class="stat-value">{{ stats.jobs }}</span><span class="stat-bar b-purple"></span></a>
+  <a class="stat" href="{{ url_for('jobs.board') }}"><span class="stat-label">Candidaturas</span><span class="stat-value">{{ stats.applications }}</span><span class="stat-bar b-blue"></span></a>
+  <a class="stat" href="{{ url_for('jobs.list_jobs', status='applied') }}"><span class="stat-label">Candidaturas pendentes</span><span class="stat-value">{{ stats.pending }}</span><span class="stat-bar b-indigo"></span></a>
+  <a class="stat" href="{{ url_for('jobs.list_jobs', status='interview') }}"><span class="stat-label">Entrevistas</span><span class="stat-value">{{ stats.interviews }}</span><span class="stat-bar b-amber"></span></a>
+</section>
+
+<section class="grid-2">
+  <div class="panel">
+    <div class="panel-head"><h3>Desempenho semanal</h3><div class="legend" id="legend-weekly"></div></div>
+    <div id="chart-weekly" class="chart" role="img" aria-label="Gráfico de atividade das últimas 8 semanas"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>Funil de candidaturas</h3></div>
+    <div id="chart-funnel" class="chart" role="img" aria-label="Quantidade de vagas por status"></div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h3>Atividades recentes</h3></div>
+  {% if activities %}
+  <ul class="activity">
+    {% for a in activities %}<li><span class="dot-sm"></span><span>{{ a['message'] }}</span><time>{{ a['created_at']|localdt }}</time></li>{% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">Nenhuma atividade ainda. Cadastre uma vaga ou importe seu currículo para começar.</p>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}
+<script>window.DASH = {{ chart|tojson }};</script>
+<script>LinkFlow.dashboardCharts(window.DASH);</script>
+{% endblock %}

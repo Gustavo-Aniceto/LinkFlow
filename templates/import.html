@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Importar currículo{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Importar currículo</h1><p class="muted">Envie um PDF com texto selecionável. Vamos extrair o conteúdo e preencher o perfil para você revisar.</p></div></div>
+
+<section class="panel">
+  <form method="post" enctype="multipart/form-data" class="form" id="upload-form">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <label class="dropzone" id="dropzone">
+      <input type="file" name="resume" accept="application/pdf,.pdf" required id="resume-file">
+      <span class="dz-icon">⇪</span>
+      <span class="dz-text"><strong>Escolha um PDF</strong> ou arraste aqui</span>
+      <small id="file-name" class="muted">Máximo 4 MB</small>
+    </label>
+    <button class="btn btn-primary" data-loading="Extraindo…">Extrair e preencher perfil</button>
+  </form>
+  <p class="muted small">A extração usa regras sobre o texto do PDF (sem IA) e pode errar em layouts complexos. Nada é salvo no perfil até você revisar e confirmar. PDFs escaneados (imagens) não são suportados.</p>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h3>Importações anteriores</h3></div>
+  {% if uploads %}
+  <table class="table">
+    <thead><tr><th>Arquivo</th><th>Enviado em</th><th class="right">Ações</th></tr></thead>
+    <tbody>
+    {% for u in uploads %}
+      <tr>
+        <td>{{ u['original_name'] }}</td><td>{{ u['created_at']|localdt }}</td>
+        <td class="right actions">
+          <a class="btn btn-sm" href="{{ url_for('profile.import_text', rid=u['id']) }}">Ver texto extraído</a>
+          <form method="post" action="{{ url_for('profile.import_delete', rid=u['id']) }}" class="inline-form" data-confirm="Remover este arquivo importado?">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger">Excluir</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="empty">Nenhum currículo importado ainda.</p>{% endif %}
+</section>
+{% endblock %}

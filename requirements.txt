@@ -1,0 +1,8 @@
+Flask>=3.0
+pypdf>=4.0
+reportlab>=4.0
+requests>=2.31
+cryptography>=42
+psycopg[binary]>=3.1
+# Opcional (melhora a leitura de PDFs com layouts difíceis; não é usado na Vercel):
+# pdfplumber>=0.11

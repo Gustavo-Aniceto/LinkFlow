@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}Perfil profissional{% endblock %}
+{% macro exp_block(e) %}
+<div class="block" data-block>
+  <button type="button" class="block-x" data-remove title="Remover" aria-label="Remover">×</button>
+  <div class="row-2">
+    <label>Cargo<input name="exp_title" value="{{ e.title }}"></label>
+    <label>Empresa<input name="exp_company" value="{{ e.company }}"></label>
+  </div>
+  <div class="row-2">
+    <label>Início<input name="exp_start" value="{{ e.start }}" placeholder="ex.: 03/2020"></label>
+    <label>Fim<input name="exp_end" value="{{ e.end }}" placeholder="ex.: 05/2023 ou Atual"></label>
+  </div>
+  <label>Atividades e resultados <small>(uma por linha)</small><textarea name="exp_desc" rows="4">{{ e.description }}</textarea></label>
+</div>
+{% endmacro %}
+{% macro edu_block(e) %}
+<div class="block" data-block>
+  <button type="button" class="block-x" data-remove title="Remover" aria-label="Remover">×</button>
+  <div class="row-2">
+    <label>Curso / grau<input name="edu_degree" value="{{ e.degree }}"></label>
+    <label>Instituição<input name="edu_institution" value="{{ e.institution }}"></label>
+  </div>
+  <div class="row-2">
+    <label>Início<input name="edu_start" value="{{ e.start }}"></label>
+    <label>Conclusão<input name="edu_end" value="{{ e.end }}"></label>
+  </div>
+</div>
+{% endmacro %}
+{% macro course_block(c) %}
+<div class="block" data-block>
+  <button type="button" class="block-x" data-remove title="Remover" aria-label="Remover">×</button>
+  <div class="row-3">
+    <label>Curso / certificação<input name="course_name" value="{{ c.name }}"></label>
+    <label>Instituição emissora<input name="course_issuer" value="{{ c.issuer }}"></label>
+    <label>Ano<input name="course_year" value="{{ c.year }}" maxlength="10"></label>
+  </div>
+</div>
+{% endmacro %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Perfil profissional</h1><p class="muted">Estas informações alimentam a análise de compatibilidade e os documentos. Cadastre apenas o que é verdadeiro.</p></div>
+  <a class="btn" href="{{ url_for('profile.import_resume') }}">⇪ Importar de PDF</a>
+</div>
+
+{% if imported %}<div class="callout callout-warn"><strong>Revisão necessária.</strong> A extração automática do PDF é aproximada. Confira cada campo antes de salvar.</div>{% endif %}
+
+<form method="post" class="form" id="profile-form">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  {% if import_id %}<input type="hidden" name="import_id" value="{{ import_id }}">{% endif %}
+
+  <section class="panel">
+    <div class="panel-head"><h3>Informações pessoais</h3></div>
+    <div class="row-2">
+      <label>Nome completo<input name="full_name" value="{{ b.profile.full_name }}"></label>
+      <label>Título profissional<input name="headline" value="{{ b.profile.headline }}" placeholder="ex.: Analista de Dados"></label>
+    </div>
+    <div class="row-3">
+      <label>E-mail<input type="email" name="email" value="{{ b.profile.email }}"></label>
+      <label>Telefone<input name="phone" value="{{ b.profile.phone }}"></label>
+      <label>Localização<input name="location" value="{{ b.profile.location }}" placeholder="Cidade, UF"></label>
+    </div>
+    <label>Link do LinkedIn<input type="url" name="linkedin_url" value="{{ b.profile.linkedin_url }}" placeholder="https://www.linkedin.com/in/..."></label>
+    <label>Resumo profissional<textarea name="summary" rows="4">{{ b.profile.summary }}</textarea></label>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h3>Preferências</h3></div>
+    <div class="row-2">
+      <label>Pretensão salarial<input name="salary_expectation" value="{{ b.profile.salary_expectation }}" placeholder="ex.: R$ 8.000 a R$ 10.000"></label>
+      <fieldset class="checks"><legend>Modalidade de trabalho desejada</legend>
+        {% for k, l in WORK_MODES %}<label class="check"><input type="checkbox" name="work_modes" value="{{ k }}" {{ 'checked' if k in b.profile.work_modes }}> {{ l }}</label>{% endfor %}
+      </fieldset>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h3>Experiências profissionais</h3><button type="button" class="btn btn-sm" data-add="exp">+ Adicionar</button></div>
+    <div id="list-exp" class="blocks">{% for e in b.experiences %}{{ exp_block(e) }}{% endfor %}</div>
+    <p class="empty js-empty" data-for="exp" {{ 'hidden' if b.experiences }}>Nenhuma experiência adicionada.</p>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h3>Formação acadêmica</h3><button type="button" class="btn btn-sm" data-add="edu">+ Adicionar</button></div>
+    <div id="list-edu" class="blocks">{% for e in b.education %}{{ edu_block(e) }}{% endfor %}</div>
+    <p class="empty js-empty" data-for="edu" {{ 'hidden' if b.education }}>Nenhuma formação adicionada.</p>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h3>Cursos e certificações</h3><button type="button" class="btn btn-sm" data-add="course">+ Adicionar</button></div>
+    <div id="list-course" class="blocks">{% for c in b.courses %}{{ course_block(c) }}{% endfor %}</div>
+    <p class="empty js-empty" data-for="course" {{ 'hidden' if b.courses }}>Nenhum curso adicionado.</p>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h3>Habilidades</h3></div>
+    <label>Separe por vírgula<textarea name="skills" rows="3" placeholder="Python, SQL, Excel, Comunicação...">{{ b.skills|join(', ') }}</textarea></label>
+  </section>
+
+  <div class="sticky-actions"><button class="btn btn-primary">Salvar perfil</button></div>
+</form>
+
+<template id="tpl-exp">{{ exp_block({'title':'','company':'','start':'','end':'','description':''}) }}</template>
+<template id="tpl-edu">{{ edu_block({'degree':'','institution':'','start':'','end':''}) }}</template>
+<template id="tpl-course">{{ course_block({'name':'','issuer':'','year':''}) }}</template>
+{% endblock %}

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}LinkFlow{% endblock %} · LinkFlow</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%238b5cf6'/%3E%3Cpath d='M9 22l7-12 7 12' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <script>try{var t=localStorage.getItem("lf-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+</head>
+<body>
+{% if current_user %}
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="{{ url_for('main.dashboard') }}">
+      <span class="brand-mark">L</span><span>Link<b>Flow</b></span>
+    </a>
+    {% set ep = request.endpoint or '' %}
+    <nav class="nav">
+      <a href="{{ url_for('main.dashboard') }}" class="{{ 'active' if ep == 'main.dashboard' }}"><i>▦</i> Dashboard</a>
+      <a href="{{ url_for('profile.edit') }}" class="{{ 'active' if ep == 'profile.edit' }}"><i>☺</i> Perfil profissional</a>
+      <a href="{{ url_for('profile.import_resume') }}" class="{{ 'active' if ep.startswith('profile.import') }}"><i>⇪</i> Importar currículo</a>
+      <a href="{{ url_for('apply.ranking') }}" class="{{ 'active' if ep == 'apply.ranking' }}"><i>★</i> Ranking</a>
+      <a href="{{ url_for('jobs.list_jobs') }}" class="{{ 'active' if (ep.startswith('jobs.') and ep != 'jobs.board') or ep == 'apply.apply_page' }}"><i>✦</i> Vagas</a>
+      <a href="{{ url_for('jobs.board') }}" class="{{ 'active' if ep == 'jobs.board' }}"><i>☷</i> Candidaturas</a>
+      <a href="{{ url_for('mail.inbox') }}" class="{{ 'active' if ep.startswith('mail.') }}"><i>✉</i> E-mails{% if unread_emails %}<span class="nbadge">{{ unread_emails }}</span>{% endif %}</a>
+      <a href="{{ url_for('documents.list_docs') }}" class="{{ 'active' if ep.startswith('documents.') }}"><i>❏</i> Documentos</a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="ai-pill {{ 'demo' if ai_provider == 'demo' else 'live' }}" title="Provedor de IA ativo">
+        <span class="dot"></span><span>{{ ai_provider_label }}</span>
+      </div>
+      <button type="button" class="theme-toggle" data-theme-toggle aria-label="Alternar tema claro/escuro"><span class="ico-dark">☾ Escuro</span><span class="ico-light">☀ Claro</span></button>
+      <div class="user-row">
+        <div class="avatar">{{ current_user['name'][:1]|upper }}</div>
+        <div class="user-meta"><strong>{{ current_user['name'] }}</strong><small>{{ current_user['email'] }}</small></div>
+      </div>
+      <form method="post" action="{{ url_for('auth.logout') }}">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <button class="btn btn-ghost btn-block btn-sm">Sair</button>
+      </form>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <div class="main-col">
+    <header class="topbar">
+      <button class="icon-btn" id="menu-btn" aria-label="Abrir menu">☰</button>
+      <span class="brand-sm">Link<b>Flow</b></span>
+      <button type="button" class="theme-toggle" data-theme-toggle aria-label="Alternar tema claro/escuro"><span class="ico-dark">☾ Escuro</span><span class="ico-light">☀ Claro</span></button>
+    </header>
+    <main class="content">
+      {% include '_flash.html' %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% else %}
+  <div class="auth-theme"><button type="button" class="theme-toggle" data-theme-toggle aria-label="Alternar tema claro/escuro"><span class="ico-dark">☾ Escuro</span><span class="ico-light">☀ Claro</span></button></div>
+  {% block public %}{% endblock %}
+{% endif %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

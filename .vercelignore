@@ -1,0 +1,5 @@
+tests/
+data/
+.env
+*.zip
+__pycache__/

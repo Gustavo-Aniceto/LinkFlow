@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import badge, csrf, sim_tag %}
+{% block title %}Ranking{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Ranking de vagas</h1><p class="muted">Suas vagas ordenadas pela compatibilidade com o seu perfil. Escolha pelo índice e monte o pacote de candidatura.</p></div>
+  <div class="actions">
+    {% if pending %}
+    <form method="post" action="{{ url_for('apply.analyze_all') }}" class="inline-form"
+          {% if ai_provider != 'demo' %}data-confirm="Analisar {{ batch }} vaga(s) usando a API de IA ({{ ai_provider_label }})? Isso consome chamadas da sua chave."{% endif %}>
+      {{ csrf() }}<button class="btn btn-primary" data-loading="Analisando…">Analisar {{ batch }} vaga(s) sem análise{% if pending > batch %} (de {{ pending }}){% endif %}</button>
+    </form>{% endif %}
+    <a class="btn" href="{{ url_for('apply.ranking', all=0 if show_all else 1) }}">{{ 'Ocultar já candidatadas' if show_all else 'Mostrar todas' }}</a>
+  </div>
+</div>
+{% if ai_provider == 'demo' %}<div class="callout callout-warn small"><strong>Índices SIMULADOS.</strong> Sem chave de IA, a compatibilidade é calculada por palavras-chave (modo demonstrativo). Configure ANTHROPIC_API_KEY ou OPENAI_API_KEY para análise real.</div>{% endif %}
+
+{% if jobs %}
+<section class="panel">
+  {% for j in jobs %}
+  <div class="rank-row">
+    <div class="rank-score {{ 'none' if j['score'] is none }}" {% if j['score'] is not none %}style="--p: {{ j['score'] }}"{% endif %}><span>{% if j['score'] is not none %}{{ j['score'] }}%{% else %}—{% endif %}</span></div>
+    <div>
+      <div class="rank-pos">#{{ loop.index }} {% if j['score'] is not none %}{{ sim_tag(j['a_sim']) }}{% endif %}</div>
+      <h3><a href="{{ url_for('jobs.detail', job_id=j['id']) }}">{{ j['title'] }}</a></h3>
+      <p class="muted">{{ j['company'] }}{% if j['work_mode'] %} · {{ WORK_MODE_LABELS[j['work_mode']] }}{% endif %}{% if j['location'] %} · {{ j['location'] }}{% endif %} · {{ badge(j['status']) }}</p>
+    </div>
+    <div class="actions">
+      <form method="post" action="{{ url_for('apply.package', job_id=j['id']) }}" class="inline-form">{{ csrf() }}<button class="btn btn-sm btn-primary" data-loading="Montando…">⚡ Montar pacote</button></form>
+      <a class="btn btn-sm" href="{{ url_for('apply.apply_page', job_id=j['id']) }}">Candidatura</a>
+      {% if j['url'] %}<a class="btn btn-sm btn-blue" href="{{ j['url'] }}" target="_blank" rel="noopener noreferrer">Original ↗</a>{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% else %}
+<div class="panel empty-state"><p class="empty">Nenhuma vaga para classificar. Cadastre vagas com a descrição completa.</p><a class="btn btn-primary" href="{{ url_for('jobs.new_job') }}">+ Nova vaga</a></div>
+{% endif %}
+{% endblock %}

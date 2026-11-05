@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Erro {{ code }}{% endblock %}
+{% macro body() %}
+  <div class="auth-card center">
+    <h1 class="big-code">{{ code }}</h1>
+    <h2>{{ title }}</h2>
+    <p class="muted">{{ message }}</p>
+    <p><a class="btn btn-primary" href="{{ url_for('main.index') }}">Voltar ao início</a></p>
+  </div>
+{% endmacro %}
+{% block content %}{{ body() }}{% endblock %}
+{% block public %}<div class="auth-wrap">{{ body() }}</div>{% endblock %}

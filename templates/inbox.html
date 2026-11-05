@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf %}
+{% block title %}E-mails{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>E-mails</h1><p class="muted">Respostas das empresas ligadas às suas vagas, sem sair do LinkFlow. Acesso somente leitura.</p></div>
+  {% if acc %}
+  <form method="post" action="{{ url_for('mail.sync_now') }}" class="inline-form">{{ csrf() }}<button class="btn btn-primary" data-loading="Sincronizando…">↻ Sincronizar agora</button></form>
+  {% endif %}
+</div>
+
+{% if not acc %}
+<section class="panel">
+  <div class="panel-head"><h3>Conectar sua caixa de e-mail</h3></div>
+  <div class="callout callout-info small">
+    <div><strong>Como funciona:</strong> o LinkFlow lê (sem apagar, mover ou enviar nada) as mensagens recentes dos últimos {{ since_days }} dias e
+    guarda <b>apenas</b> as que parecem ser de empresas das suas vagas (pelo nome do remetente, domínio, assunto ou, em e-mails de LinkedIn/Gupy/Indeed etc., pelo texto).
+    Você pode corrigir o vínculo manualmente. Nada é enviado a terceiros.</div>
+  </div>
+  <form method="post" action="{{ url_for('mail.connect') }}" class="form" autocomplete="off">
+    {{ csrf() }}
+    <div class="row-2">
+      <label>Provedor
+        <select name="preset" id="mail-preset">
+          {% for k, (label, host, port, shost, sport) in PRESETS.items() %}<option value="{{ k }}" data-host="{{ host }}" data-smtp="{{ shost }}" data-smtpport="{{ sport }}">{{ label }}</option>{% endfor %}
+        </select></label>
+      <label>Servidor IMAP <small>(preenchido automaticamente; edite se usar outro)</small><input name="host" id="mail-host" value="imap.gmail.com" required></label>
+    </div>
+    <div class="row-3">
+      <label>Seu e-mail<input type="email" name="username" required autocomplete="off"></label>
+      <label>Senha de aplicativo<input type="password" name="password" required autocomplete="new-password"></label>
+      <label>Porta / pasta
+        <div class="row-2"><input name="port" value="993" inputmode="numeric"><input name="folder" value="INBOX"></div></label>
+    </div>
+    <details class="small muted"><summary>Servidor de envio (SMTP) — usado para enviar candidaturas</summary>
+      <div class="row-2 mt"><label>Servidor SMTP<input name="smtp_host" id="mail-smtp" value="smtp.gmail.com"></label>
+      <label>Porta SMTP<input name="smtp_port" id="mail-smtpport" value="465" inputmode="numeric"></label></div>
+      <p>O LinkFlow só envia e-mail quando você clica em “Enviar candidatura” e confirma, um destinatário por vez.</p>
+    </details>
+    <details class="small muted"><summary>Como gerar a senha de aplicativo?</summary>
+      <p><b>Gmail:</b> ative a verificação em duas etapas, depois acesse <i>Conta Google → Segurança → Senhas de app</i> e crie uma. IMAP já vem habilitado.<br>
+      <b>Outlook/Hotmail:</b> Segurança da conta → Opções de segurança avançadas → Senhas de app (contas de trabalho/escola podem bloquear IMAP).<br>
+      <b>Yahoo / iCloud:</b> gere uma senha específica de app nas configurações de segurança da conta.<br>
+      A senha normal da conta não funciona. A senha de app fica criptografada no seu computador e pode ser revogada a qualquer momento no provedor.</p>
+    </details>
+    <div class="actions"><button class="btn btn-primary" data-loading="Testando conexão…">Conectar e testar</button></div>
+  </form>
+</section>
+{% else %}
+<section class="panel">
+  <div class="panel-head">
+    <div><strong>{{ acc['username'] }}</strong> <span class="muted small">· {{ acc['host'] }} · pasta {{ acc['folder'] }} · envio via {{ acc['smtp_host'] }}</span><br>
+      <span class="muted small">{% if acc['last_sync'] %}Última sincronização: {{ acc['last_sync']|localdt }} ({{ acc['last_scanned'] }} mensagens verificadas){% else %}Ainda não sincronizado.{% endif %}</span></div>
+    <form method="post" action="{{ url_for('mail.disconnect') }}" class="inline-form actions" data-confirm="Desconectar e remover a senha salva?">
+      {{ csrf() }}
+      <label class="check small"><input type="checkbox" name="delete_emails" value="1"> apagar mensagens guardadas</label>
+      <button class="btn btn-sm btn-danger">Desconectar</button>
+    </form>
+  </div>
+</section>
+
+<div class="tabs">
+  <a href="{{ url_for('mail.inbox') }}" class="{{ 'on' if flt == 'all' }}">Todas</a>
+  <a href="{{ url_for('mail.inbox', f='unread') }}" class="{{ 'on' if flt == 'unread' }}">Não lidas{% if unread %} ({{ unread }}){% endif %}</a>
+  <a href="{{ url_for('mail.inbox', f='nolink') }}" class="{{ 'on' if flt == 'nolink' }}">Sem vaga vinculada</a>
+</div>
+<section class="panel">
+  {% if msgs %}
+  <div class="mail-list">
+    {% for m in msgs %}
+    <a class="mail-row {{ 'unread' if not m['is_read'] }}" href="{{ url_for('mail.view', email_id=m['id']) }}">
+      <span class="dot-sm"></span>
+      <span class="m-from">{{ m['from_name'] or m['from_addr'] }}</span>
+      <span class="m-subj">{{ m['subject'] or '(sem assunto)' }}{% if m['job_title'] %}<small>· {{ m['job_title'] }} @ {{ m['job_company'] }}</small>{% endif %}</span>
+      <span class="m-date">{{ m['received_at']|localdt('%d/%m %H:%M') }}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">{% if flt != 'all' %}Nada neste filtro.{% else %}Nenhuma mensagem ligada às suas vagas ainda. Cadastre vagas com o nome correto da empresa e clique em “Sincronizar agora”.{% endif %}</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+(() => { const p = document.getElementById('mail-preset'), h = document.getElementById('mail-host'); if (!p) return;
+  p.addEventListener('change', () => { const o = p.selectedOptions[0], d = o.dataset.host; h.value = d; document.getElementById('mail-smtp').value = o.dataset.smtp; document.getElementById('mail-smtpport').value = o.dataset.smtpport; if (!d) h.focus(); });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Editar vaga' if editing else 'Nova vaga' }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ 'Editar vaga' if editing else 'Nova vaga' }}</h1>
+  <p class="muted">Cole a descrição completa da vaga: ela é a base da análise de compatibilidade.</p></div></div>
+<form method="post" class="form panel">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <div class="row-2">
+    <label>Cargo *<input name="title" required value="{{ job.get('title','') }}"></label>
+    <label>Empresa *<input name="company" required value="{{ job.get('company','') }}"></label>
+  </div>
+  <div class="row-3">
+    <label>Localização<input name="location" value="{{ job.get('location','') }}" placeholder="Cidade, UF"></label>
+    <label>Salário<input name="salary" value="{{ job.get('salary','') }}" placeholder="ex.: R$ 7.000 ou a combinar"></label>
+    <label>Modalidade
+      <select name="work_mode"><option value="">Não informada</option>
+        {% for k, l in WORK_MODES %}<option value="{{ k }}" {{ 'selected' if job.get('work_mode') == k }}>{{ l }}</option>{% endfor %}
+      </select></label>
+  </div>
+  <label>Link original da vaga <small>(LinkedIn ou outro site — apenas armazenado, nada é acessado automaticamente)</small>
+    <input type="url" name="url" value="{{ job.get('url','') }}" placeholder="https://www.linkedin.com/jobs/view/…"></label>
+  <label>Descrição da vaga<textarea name="description" rows="12">{{ job.get('description','') }}</textarea></label>
+  <div class="actions">
+    <button class="btn btn-primary">Salvar vaga</button>
+    <a class="btn btn-ghost" href="{{ url_for('jobs.detail', job_id=job['id']) if editing else url_for('jobs.list_jobs') }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

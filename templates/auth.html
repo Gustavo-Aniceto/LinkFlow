@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Criar conta' if mode == 'register' else 'Entrar' }}{% endblock %}
+{% block public %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="brand brand-lg"><span class="brand-mark">L</span><span>Link<b>Flow</b></span></div>
+    <p class="muted center">Procure vagas, analise compatibilidade e organize suas candidaturas.</p>
+    {% include '_flash.html' %}
+    {% if mode == 'register' %}
+    <form method="post" class="form" autocomplete="on">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <label>Nome<input name="name" required value="{{ request.form.get('name','') }}" autofocus></label>
+      <label>E-mail<input type="email" name="email" required value="{{ request.form.get('email','') }}"></label>
+      <label>Senha <small>(mínimo 8 caracteres)</small><input type="password" name="password" minlength="8" required></label>
+      <label>Confirmar senha<input type="password" name="password2" minlength="8" required></label>
+      <button class="btn btn-primary btn-block">Criar conta</button>
+    </form>
+    <p class="center muted">Já tem conta? <a href="{{ url_for('auth.login') }}">Entrar</a></p>
+    {% else %}
+    <form method="post" class="form">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <label>E-mail<input type="email" name="email" required value="{{ request.form.get('email','') }}" autofocus></label>
+      <label>Senha<input type="password" name="password" required></label>
+      <button class="btn btn-primary btn-block">Entrar</button>
+    </form>
+    <p class="center muted">Primeira vez? <a href="{{ url_for('auth.register') }}">Criar conta</a></p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
