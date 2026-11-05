@@ -90,6 +90,7 @@ Edite o arquivo `.env` (copiado de `.env.example`) e preencha **uma** das chaves
 |---|---|
 | Anthropic (Claude) | `ANTHROPIC_API_KEY=sk-ant-...` e, opcionalmente, `ANTHROPIC_MODEL=` |
 | OpenAI | `OPENAI_API_KEY=sk-...` e, opcionalmente, `OPENAI_MODEL=` |
+| Gratuito (Groq, Gemini, OpenRouter) | `OPENAI_API_KEY=<chave>`, `OPENAI_BASE_URL=<url base compatível>` e `OPENAI_MODEL=<modelo>` |
 
 - Se as duas estiverem preenchidas, a Anthropic é usada.
 - O provedor ativo aparece na barra lateral. Sem chave, aparece **“Modo demonstrativo (simulado)”**.

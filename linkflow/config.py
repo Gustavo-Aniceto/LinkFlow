@@ -69,6 +69,7 @@ def build_config(data_dir_override=None) -> dict:
         "ANTHROPIC_MODEL": os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5-5").strip(),
         "OPENAI_API_KEY": os.environ.get("OPENAI_API_KEY", "").strip(),
         "OPENAI_MODEL": os.environ.get("OPENAI_MODEL", "gpt-4o-mini").strip(),
+        "OPENAI_BASE_URL": os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1").strip().rstrip("/"),
         "AI_TIMEOUT": int(os.environ.get("AI_TIMEOUT", "45" if ON_VERCEL else "90")),
         "SESSION_COOKIE_HTTPONLY": True,
         "SESSION_COOKIE_SAMESITE": "Lax",

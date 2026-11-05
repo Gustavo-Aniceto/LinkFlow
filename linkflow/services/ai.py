@@ -42,7 +42,7 @@ def provider() -> str:
 
 def provider_label() -> str:
     cfg = current_app.config
-    return {"anthropic": f"Anthropic ({cfg['ANTHROPIC_MODEL']})", "openai": f"OpenAI ({cfg['OPENAI_MODEL']})",
+    return {"anthropic": f"Anthropic ({cfg['ANTHROPIC_MODEL']})", "openai": f"OpenAI-compatível ({cfg['OPENAI_MODEL']})" if "api.openai.com" not in cfg["OPENAI_BASE_URL"] else f"OpenAI ({cfg['OPENAI_MODEL']})",
             "demo": "Modo demonstrativo (simulado)"}[provider()]
 
 
@@ -65,7 +65,7 @@ def _call_llm(system: str, user: str, json_mode: bool) -> str:
                                                               {"role": "user", "content": user}]}
             if json_mode:
                 body["response_format"] = {"type": "json_object"}
-            r = requests.post("https://api.openai.com/v1/chat/completions", timeout=timeout,
+            r = requests.post(cfg["OPENAI_BASE_URL"] + "/chat/completions", timeout=timeout,
                               headers={"Authorization": f"Bearer {cfg['OPENAI_API_KEY']}"}, json=body)
             if r.status_code != 200:
                 raise AIError(f"OpenAI retornou {r.status_code}: {r.text[:300]}")
