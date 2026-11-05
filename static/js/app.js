@@ -146,7 +146,17 @@ const LinkFlow = (() => {
   }
 
   /* ---------------- geral ---------------- */
+  function busyForms() {
+    document.querySelectorAll('form[data-busy]').forEach(function (f) {
+      f.addEventListener('submit', function () {
+        var b = f.querySelector('button.btn-primary');
+        if (b) { b.disabled = true; b.textContent = 'Lendo a vaga e montando o currículo…'; }
+      });
+    });
+  }
+
   function init() {
+    busyForms();
     $('#menu-btn')?.addEventListener('click', () => document.body.classList.toggle('menu-open'));
     $('#scrim')?.addEventListener('click', () => document.body.classList.remove('menu-open'));
     document.addEventListener('click', e => { if (e.target.closest('.flash-x')) e.target.closest('.flash').remove(); });

@@ -21,6 +21,7 @@
       <a href="{{ url_for('main.dashboard') }}" class="{{ 'active' if ep == 'main.dashboard' }}"><i>▦</i> Dashboard</a>
       <a href="{{ url_for('profile.edit') }}" class="{{ 'active' if ep == 'profile.edit' }}"><i>☺</i> Perfil profissional</a>
       <a href="{{ url_for('profile.import_resume') }}" class="{{ 'active' if ep.startswith('profile.import') }}"><i>⇪</i> Importar currículo</a>
+      <a href="{{ url_for('quick.quick') }}" class="{{ 'active' if ep == 'quick.quick' }}"><i>⚡</i> Currículo por link</a>
       <a href="{{ url_for('apply.ranking') }}" class="{{ 'active' if ep == 'apply.ranking' }}"><i>★</i> Ranking</a>
       <a href="{{ url_for('jobs.list_jobs') }}" class="{{ 'active' if (ep.startswith('jobs.') and ep != 'jobs.board') or ep == 'apply.apply_page' }}"><i>✦</i> Vagas</a>
       <a href="{{ url_for('jobs.board') }}" class="{{ 'active' if ep == 'jobs.board' }}"><i>☷</i> Candidaturas</a>

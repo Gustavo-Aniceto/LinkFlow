@@ -29,6 +29,7 @@ python tests/test_ai_providers.py
 python tests/test_mail.py
 python tests/test_apply.py
 python tests/test_portability.py
+python tests/test_quick.py
 ```
 
 ## Ranking, pacote e candidatura
@@ -42,6 +43,13 @@ python tests/test_portability.py
   (`MAX_SENDS_PER_DAY`, padrão 10). Não há envio automático nem em lote.
 - **Candidatura automática em LinkedIn/portais não existe** (sem API para candidatos e proibido pelos termos). Nesses casos use o botão
   “Abrir vaga original” e anexe os PDFs gerados.
+
+## Currículo por link da vaga
+
+Em **Currículo por link**, cole o link de uma vaga pública: o LinkFlow lê a página (dados estruturados da vaga ou texto), cadastra a vaga
+e monta currículo e carta direcionados, usando só os dados do seu perfil. Você revisa, edita, baixa o PDF ou envia por e-mail.
+Uma requisição por link informado, com bloqueio de endereços internos. LinkedIn e sites com login não são lidos automaticamente:
+nesses casos o app pede para você colar a descrição. Cargo e empresa lidos automaticamente podem ser corrigidos em “Editar vaga”.
 
 ## Publicar na Vercel (produção)
 

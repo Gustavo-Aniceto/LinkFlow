@@ -35,8 +35,8 @@ def create_app(overrides: dict | None = None) -> Flask:
             resp.headers.setdefault("Cache-Control", "no-store")
         return resp
 
-    from .blueprints import apply, auth, documents, jobs, mail, main, profile
-    for bp in (auth.bp, main.bp, profile.bp, jobs.bp, apply.bp, documents.bp, mail.bp):
+    from .blueprints import apply, auth, documents, jobs, mail, main, profile, quick
+    for bp in (auth.bp, main.bp, profile.bp, jobs.bp, apply.bp, quick.bp, documents.bp, mail.bp):
         app.register_blueprint(bp)
 
     app.before_request(load_user)

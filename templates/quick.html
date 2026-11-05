@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Currículo por link{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Currículo por link da vaga</h1>
+<p class="muted">Cole o link da vaga. O LinkFlow lê a página, cadastra a vaga e monta currículo e carta direcionados, usando <b>somente os dados do seu perfil</b> (nada é inventado). Você revisa e envia.</p></div></div>
+<div class="panel">
+  <form method="post" class="form" data-busy>
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <label>Link da vaga<input type="url" name="url" value="{{ form.url }}" placeholder="https://empresa.com/vagas/analista…" {{ 'autofocus' if not need_text }}></label>
+    {% if need_text %}
+    <p class="muted">Se o site bloqueia a leitura (como o LinkedIn), copie a descrição da vaga e cole aqui:</p>
+    <div class="grid-2">
+      <label>Cargo (opcional)<input name="title" value="{{ form.title }}"></label>
+      <label>Empresa (opcional)<input name="company" value="{{ form.company }}"></label>
+    </div>
+    <label>Descrição da vaga<textarea name="text" rows="12" placeholder="Cole aqui o texto da vaga…">{{ form.text }}</textarea></label>
+    {% endif %}
+    <button class="btn btn-primary">Montar meu currículo para esta vaga</button>
+  </form>
+  {% if not need_text %}
+  <details class="muted"><summary>O site é o LinkedIn ou pede login?</summary>
+    <p>Esses sites não permitem leitura automática. Se a leitura falhar, o LinkFlow abre um campo para você colar a descrição.</p></details>
+  {% endif %}
+</div>
+{% endblock %}
