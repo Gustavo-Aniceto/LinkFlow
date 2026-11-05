@@ -167,7 +167,15 @@ const LinkFlow = (() => {
     }));
     const file = $('#resume-file'), dz = $('#dropzone');
     if (file) {
-      file.addEventListener('change', () => { $('#file-name').textContent = file.files[0] ? file.files[0].name : 'Máximo 10 MB'; });
+      file.addEventListener('change', () => {
+        const f0 = file.files[0], label = $('#file-name');
+        if (f0 && f0.size > 4 * 1024 * 1024) {
+          label.textContent = f0.name + ' — arquivo grande demais (' + (f0.size / 1048576).toFixed(1) + ' MB). Máximo 4 MB: comprima o PDF ou cole o texto abaixo.';
+          file.value = '';
+          return;
+        }
+        label.textContent = f0 ? f0.name + ' (' + (f0.size / 1048576).toFixed(1) + ' MB)' : 'Máximo 4 MB';
+      });
       ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, () => dz.classList.add('drag')));
       ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, () => dz.classList.remove('drag')));
     }

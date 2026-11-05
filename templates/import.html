@@ -18,6 +18,16 @@
 </section>
 
 <section class="panel">
+  <div class="panel-head"><h3>Ou cole o texto do currículo</h3></div>
+  <p class="muted small">Sem limite de tamanho: abra seu currículo, selecione tudo (Ctrl+A), copie (Ctrl+C) e cole abaixo. Funciona igual ao PDF.</p>
+  <form method="post" class="form" data-busy>
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <textarea name="pasted_text" rows="10" required placeholder="Cole aqui o texto do seu currículo…"></textarea>
+    <button class="btn btn-primary">Extrair e preencher perfil</button>
+  </form>
+</section>
+
+<section class="panel">
   <div class="panel-head"><h3>Importações anteriores</h3></div>
   {% if uploads %}
   <table class="table">

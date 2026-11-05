@@ -76,6 +76,19 @@ def edit():
 @login_required
 def import_resume():
     uid, db = g.user["id"], get_db()
+    if request.method == "POST" and request.form.get("pasted_text") is not None:
+        text = request.form["pasted_text"].strip()
+        if len(text) < 100:
+            flash("Cole o texto completo do currículo (muito curto).", "error")
+            return redirect(url_for("profile.import_resume"))
+        text = text[:60000]
+        parsed = resume_parser.parse_resume_text(text)
+        new_id = db.insert(
+            "INSERT INTO resume_uploads (user_id,original_name,stored_name,extracted_text,parsed_json,created_at) "
+            "VALUES (?,?,?,?,?,?)", (uid, "Texto colado", "", text, json.dumps(parsed, ensure_ascii=False), now()))
+        log_activity(uid, "Currículo importado a partir de texto colado")
+        db.commit()
+        return redirect(url_for("profile.edit", **{"import": new_id}))
     if request.method == "POST":
         f = request.files.get("resume")
         if not f or not f.filename:
