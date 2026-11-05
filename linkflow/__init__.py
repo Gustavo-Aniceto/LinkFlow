@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from flask import Flask, g, jsonify, render_template, request
 from werkzeug.exceptions import HTTPException
 
-from .config import build_config
+from .config import ON_VERCEL, build_config
 from .db import STATUSES, STATUS_LABELS, WORK_MODES, init_db
 from .security import check_csrf, csrf_token, load_user
 from .services import ai
@@ -38,6 +38,14 @@ def create_app(overrides: dict | None = None) -> Flask:
     from .blueprints import apply, auth, documents, jobs, mail, main, profile, quick
     for bp in (auth.bp, main.bp, profile.bp, jobs.bp, apply.bp, quick.bp, documents.bp, mail.bp):
         app.register_blueprint(bp)
+
+    @app.before_request
+    def require_persistent_db():
+        # Na Vercel o disco é temporário: sem Postgres, contas e dados sumiriam sem aviso.
+        if ON_VERCEL and not app.config["DATABASE_URL"] and request.endpoint != "static":
+            from werkzeug.exceptions import ServiceUnavailable
+            raise ServiceUnavailable("Banco de dados não configurado. No projeto da Vercel, abra Storage, conecte o Neon "
+                                     "(isso cria a variável DATABASE_URL) e faça um novo deploy.")
 
     app.before_request(load_user)
     app.before_request(check_csrf)
@@ -77,7 +85,8 @@ def create_app(overrides: dict | None = None) -> Flask:
         if wants_json():
             return jsonify(error=err.description), err.code
         titles = {400: "Requisição inválida", 404: "Página não encontrada",
-                  413: "Arquivo muito grande (máximo 4 MB)", 405: "Método não permitido"}
+                  413: "Arquivo muito grande (máximo 4 MB)", 405: "Método não permitido",
+                  503: "Banco de dados não configurado"}
         return render_template("error.html", code=err.code, title=titles.get(err.code, err.name),
                                message=err.description), err.code
 
