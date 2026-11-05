@@ -232,10 +232,10 @@ def ensure_schema(app) -> None:
     db = _connect(app)
     try:
         if db.dialect == "postgres":
-            db.execute("SELECT pg_advisory_lock(727274)")  # evita corrida entre cold starts
+            # Lock por transação: funciona também atrás do pooler (pgbouncer) do Neon, onde locks de sessão não valem.
             try:
+                db.execute("SELECT pg_advisory_xact_lock(727274)")  # evita corrida entre cold starts
                 db.execute("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
-                db.commit()
                 row = db.execute("SELECT value FROM meta WHERE key='schema_version'").fetchone()
                 if not row or row["value"] != SCHEMA_VERSION:
                     for stmt in _statements("postgres"):
@@ -243,9 +243,9 @@ def ensure_schema(app) -> None:
                     db.execute("INSERT INTO meta (key, value) VALUES ('schema_version', ?) "
                                "ON CONFLICT (key) DO UPDATE SET value=excluded.value", (SCHEMA_VERSION,))
                 db.commit()
-            finally:
-                db.execute("SELECT pg_advisory_unlock(727274)")
-                db.commit()
+            except Exception:
+                db.conn.rollback()
+                raise
         else:
             for stmt in _statements("sqlite"):
                 db.execute(stmt)
